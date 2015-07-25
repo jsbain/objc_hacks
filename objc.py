@@ -1,4 +1,5 @@
 # coding: utf-8
+#. copy of objc_utils with fixed 32 bit stret, and __dir__ functionality
 
 try:
 	import ctypes
@@ -252,6 +253,12 @@ class ObjCClass (object):
 			cached_method = ObjCClassMethod(self, sel_name)
 			self._cached_methods[sel_name] = cached_method
 		return cached_method
+	def __dir__(self):
+	   m=[k[0] for k in get_class_methods(self)]
+	   if self.superclass():
+	      supcls=ObjCClass(ObjCInstance(self.superclass())._get_objc_classname())
+	      m.extend(supcls.__dir__())
+	   return m
 
 class ObjCIterator (object):
 	'''Wrapper for an NSEnumerator object -- this is used for supporting `for ... in` iteration for Objective-C collection types (NSArray, NSDictionary, NSSet).'''
@@ -501,7 +508,6 @@ def nsurl(url_or_path):
 		return NSURL.URLWithString_(ns(url_or_path))
 	return NSURL.fileURLWithPath_(ns(url_or_path))
 	
-import ui
-v=ui.View()
-vp=v._objc_ptr
-vo=ObjCInstance(vp)
+
+
+
