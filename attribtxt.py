@@ -1,7 +1,7 @@
 # coding: utf-8
 # experiments with attributed strings
 
-from objc_util import *
+from objc import *
 import ctypes
 
 NSMutableAttributedString=ObjCClass('NSMutableAttributedString')
