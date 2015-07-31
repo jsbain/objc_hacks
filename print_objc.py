@@ -34,32 +34,11 @@ def parse_encoding(enc):
 
    #objc_property_t * class_copyPropertyList ( Class cls, unsigned int *outCount );
    
-def get_properties(objc_class):
-   '''useless... selectors seem to be props and vice versa?'''
-    free = c.free
-    free.argtypes = [c_void_p]
-    free.restype = None
-   
-    class_copyPropertyList = c.class_copyMethodList
-    class_copyPropertyList.restype = ctypes.POINTER(c_void_p)
-    class_copyPropertyList.argtypes = [c_void_p, ctypes.POINTER(ctypes.c_uint)]
-    
-    property_getName = c.property_getName
-    property_getName.restype = c_char_p
-    property_getName.argtypes = [c_void_p]
-    py_properties = []
-    num_props = c_uint(0)
-    prop_list_ptr = class_copyPropertyList(objc_class.ptr, ctypes.byref(num_props))
-    try:
-       for i in xrange(num_props.value):
-          py_properties.append(property_getName(prop_list_ptr[i]))
-    finally:
-       free(prop_list_ptr)
-    return py_properties
+
 
     
 def get_methods(objc_class):
-   '''return list of selector name, and string ret type and arg types'''
+    '''return list of selector name, and string ret type and arg types'''
     free = c.free
     free.argtypes = [c_void_p]
     free.restype = None
@@ -95,7 +74,7 @@ def get_methods(objc_class):
     return sorted(py_methods)
     
 def get_class_methods(objc_class):
-   '''get class methods'''
+    '''get class methods'''
     object_getClass = c.object_getClass
     object_getClass.restype = c_void_p
     object_getClass.argtypes = [c_void_p]
@@ -120,4 +99,3 @@ def print_methods(clsname,print_private=False):
    print '\n'.join([(k[1]+'\t' +k[0]+'( '+', '.join(k[2])+' )') for k in m if not k[0].startswith('_')])
    if print_private:
          print '\n'.join([(k[1]+'\t' +k[0]+'( '+', '.join(k[2])+' )') for k in m if k[0].startswith('_')])
-

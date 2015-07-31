@@ -1,4 +1,4 @@
-# coding: utf-8
+# text encoding: utf-8
 #. copy of objc_utils with fixed 32 bit stret, and __dir__ functionality
 
 try:
@@ -10,6 +10,8 @@ from ctypes import Structure, sizeof, cdll, c_void_p, c_char, c_char_p, c_double
 import re
 import sys
 import os
+import itertools
+import weakref
 
 c = cdll.LoadLibrary(None)
 
@@ -83,6 +85,8 @@ class CGVector (Structure):
 
 class CGRect (Structure):
    _fields_ = [('origin', CGPoint), ('size', CGSize)]
+   def __repr__(self):
+      return (self.origin.x, self.origin.y, self.size.width, self.size.height).__repr__()
 
 class CGAffineTransform (Structure):
    _fields_ = [('a', CGFloat), ('b', CGFloat), ('c', CGFloat), ('d', CGFloat), ('tx', CGFloat), ('ty', CGFloat)]
@@ -254,7 +258,10 @@ class ObjCIterator (object):
 class ObjCInstance (object):
    '''Wrapper for a pointer to an Objective-C instance; acts as a proxy for sending messages to the object. Method calls are converted to Objective-C messages on-the-fly -- this is done by replacing underscores in the method name with colons in the selector name, and using the selector and arguments for a call to the low-level objc_msgSend function in the Objective-C runtime. For example, calling `obj.setFoo_withBar_(foo, bar)` (Python) is translated to `[obj setFoo:foo withBar:bar]` (Objective-C). If a method call returns an Objective-C object, it is also wrapped in an ObjCInstance, so calls can be chained.'''
    def __init__(self, ptr):
-      self.ptr = ptr
+      if hasattr(ptr,'_objc_ptr'):
+         self.ptr=ptr._objc_ptr
+      else:
+         self.ptr = ptr
       self._as_parameter_ = ptr
       self._cached_methods = {}
       if ptr:
@@ -294,12 +301,12 @@ class ObjCInstance (object):
          return self.ptr != None
 
    def __len__(self):
-      if any(self.isKindOfClass_(c) for c in (NSArray, NSDictionary, NSSet)):
+      if hasattr(self,'count'):
          return self.count()
       raise TypeError('object of type \'%s\' has no len()' % (self._get_objc_classname(),))
 
    def __getitem__(self, key):
-      if self.hasattr(self,'objectAtIndex_'):
+      if hasattr(self,'objectAtIndex_'):
          if not isinstance(key, (int, long)):
             raise TypeError('array indices must be integers not %s' % (type(key),))
          array_length = self.count()
@@ -369,7 +376,8 @@ class ObjCInstance (object):
          m.extend(supcls.__dir__())
       return m
 def _get_possible_selector_names(method_name):
-	return [''.join([x+y for x, y in itertools.izip_longest(method_name.split('_'), s, fillvalue='')]) for s in [''.join(x) for x in itertools.product(':_', repeat=len(method_name.split('_'))-1)]]
+   import itertools
+   return [''.join([x+y for x, y in itertools.izip_longest(method_name.split('_'), s, fillvalue='')]) for s in [''.join(x) for x in itertools.product(':_', repeat=len(method_name.split('_'))-1)]]
 
 class ObjCClassMethod (object):
 	'''Wrapper for an Objective-C class method. ObjCClass generates these objects automatically when accessing an attribute, you typically don't need use this class directly.'''
