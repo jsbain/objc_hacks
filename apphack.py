@@ -1,7 +1,7 @@
 # coding: utf-8
-import objc
-reload(objc)
-from objc import *
+
+
+from objc_util import *
 import ui,console
 
 
@@ -12,19 +12,18 @@ def get_toolbar(view):
    #get main editor toolbar, by recursively walking the view
    sv=view.subviews()
    
-   for i in range(sv.count()-1):
-      v=sv.objectAtIndex_(ns(i))
+   for v in sv:
       if v._get_objc_classname()=='OMTabViewToolbar':
          return v
       tb= get_toolbar(v)
       if tb:
-         return tb
+        return tb
          
 tb=get_toolbar(main_view)
 execbtn=ui.Button(frame=(tb.size().width-tb.rightItemsWidth()-40,22,40,40))
 execbtn.flex='R'
 execbtn.image=ui.Image.named('iow:ios7_play_32')
-execbtn_obj=ObjCInstance(execbtn._objc_ptr)
+execbtn_obj=ObjCInstance(execbtn)
 tb.addSubview_(execbtn_obj)
 
 def run_script(sender):
