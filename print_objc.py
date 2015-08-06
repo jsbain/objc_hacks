@@ -1,5 +1,5 @@
 # coding: utf-8
-from objc import *
+from objc_util import *
 import ctypes
 
 def parse_encoding(enc):

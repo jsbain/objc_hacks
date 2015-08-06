@@ -3,7 +3,7 @@
 
 from objc_util import *
 import ui,console
-
+import weakref
 
 w=ObjCClass('UIApplication').sharedApplication().keyWindow()
 main_view=w.rootViewController().view()
@@ -25,7 +25,12 @@ execbtn.flex='R'
 execbtn.image=ui.Image.named('iow:ios7_play_32')
 execbtn_obj=ObjCInstance(execbtn)
 tb.addSubview_(execbtn_obj)
-
+def make_cleanup(obj):
+   def cleanup():
+      if hasattr(obj,'removeFromSuperview' ):
+         obj.removeFromSuperview()
+   return cleanup
+weakref.ref(execbtn_obj,make_cleanup(execbtn_obj))
 def run_script(sender):
    import editor
    execfile(editor.get_path())
