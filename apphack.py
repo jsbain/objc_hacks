@@ -22,6 +22,8 @@ def get_toolbar(view):
 			return tb
 def create_toolbar_button(action,image,index=0,tag=''):
 	'''create a button on main toolbar, with action,imagename, index location, and string tagname.  button and action are stored in __persistent_views[index].  tag allows finding view using tb.viewFromTag_(hash(tag)) (old idea)'''
+	assert(callable(action))
+
 	tb=get_toolbar(main_view)
 	global __persistent_views
 	try:
@@ -52,14 +54,12 @@ def remove_toolbar_button(index):
 		ObjCInstance(btn).removeFromSuperview()
 	except KeyError:
 		pass
-if __name__=='__main__':
-	# example:  create a new play bitton that runs a script without clearing globals
 
+if __name__=='__main__':
 	def run_script(sender):
 		'''run a script without clearing glbals'''
 		import editor
-		print filter_subviews
 		editor.reload_files()
-		execfile(editor.get_path())
+		execfile(editor.get_path(),globals())
 
 	create_toolbar_button(run_script,'iow:play_32',0,'execfile')
