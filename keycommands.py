@@ -45,3 +45,10 @@ replacement=create_objc_class('replacement',
 replacement_obj=replacement.new()
 newimp=c.method_getImplementation(replacement_obj.keyCommands.method)
 oldimp=c.method_setImplementation(app.keyCommands.method,newimp)
+
+print 'testing if keycommand was added'
+assert(sel_getName(app.keyCommands()[-1].action())=='handleCommandH') #was key added?
+print 'testing that action was added'
+assert(hasattr(app,'handleCommandH'))
+print 'testing action:'
+app.handleCommandH()
