@@ -14,21 +14,29 @@ UIKeyCommand=ObjCClass('UIKeyCommand')
 keycommands=list(app.keyCommands())
 
 # create button handler to encapsulate the action
-def __myaction(sender):
+def handleCommandH(_cmd,_sel):
 	print 'hi'	
-__btn=ui.Button()
-__btn.action=__myaction
-btnobj=ObjCInstance(__btn)
+CmdHHandler=create_objc_class('CmdHHandler',
+											ObjCClass('UIResponder'),			
+											[handleCommandH])
+CmdHHandler_obj=CmdHHandler.new()
+CmdHHandler_imp=c.method_getImplementation(CmdHHandler_obj.handleCommandH.method)
+class_addMethod(UIApplication.ptr,sel('handleCommandH'),CmdHHandler_imp,'v@:')
+
 
 #create a new keyCommand---command-h
 # and append to keycommands
 UIKeyModifierCommand=1<<20
-mykey=UIKeyCommand.alloc().initWithInput_modifierFlags_action_(
-					'h',UIKeyModifierCommand,btnobj.invokeAction_.method)
+mykey=UIKeyCommand.keyCommandWithInput_modifierFlags_action_(
+																				'h',UIKeyModifierCommand,
+																				sel('handleCommandH'))
 keycommands.append(mykey)
 __keycommands_obj=ns(keycommands)
 
+
 #create replacement implementation
+#   in ios9 this can maybe use addKeyCommand instead of swizzling
+#   note __keycommands_obj must hang around in globals, there is probably a more robust way to do this.  
 def replacement_keyCommands(_self,_cmd):
 		return __keycommands_obj.ptr
 replacement=create_objc_class('replacement',
