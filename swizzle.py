@@ -5,6 +5,8 @@ from objc_util import *
 from objc_util import parse_types
 import ctypes
 import inspect
+import sys
+
 def _str_to_bytes(s):
 	if sys.version_info[0] >= 3:
 		if isinstance(s,bytes):
