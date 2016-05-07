@@ -1,6 +1,10 @@
 # coding: utf-8
+from __future__ import absolute_import
+from __future__ import print_function
 from objc_util import *
 import ctypes
+import re
+from six.moves import range
 
 def parse_encoding(enc):
    type_names={'c':'char',
@@ -24,8 +28,8 @@ def parse_encoding(enc):
    '?':'unknown'}
 
    def parse(c):
-      return c.startswith('^')*'*' + type_names.get(c.split('^')[-1],c.split('^')[-1])
-   enc=re.split(r'\d*',enc)
+      return c.startswith(b'^')*b'*' + type_names.get(c.split(b'^')[-1],c.split(b'^')[-1])
+   enc=re.split(b'\d*',enc)
    signature = [parse(c) for c in enc if c]
 
    return signature
@@ -61,12 +65,12 @@ def get_methods(objc_class):
     py_methods = []
     num_methods = c_uint(0)
     method_list_ptr = class_copyMethodList(objc_class.ptr, ctypes.byref(num_methods))
-    for i in xrange(num_methods.value):
+    for i in range(num_methods.value):
         selector = method_getName(method_list_ptr[i])
         enc=method_getTypeEncoding(method_list_ptr[i])
         penc=parse_encoding(enc)
-        sel_name = sel_getName(selector)
-        py_method_name = sel_name.replace(':', '_')
+        sel_name = c.sel_getName(selector)
+        py_method_name = sel_name.replace(b':', b'_')
         
         #py_methods.append(enc[0]+' ' +py_method_name+'('+', '.join(enc[3:])+')')
         py_methods.append((py_method_name, penc[0],penc[3:]))
@@ -85,17 +89,18 @@ import console
 def print_methods(clsname,print_private=False):
    cls=ObjCClass(clsname)
    console.set_color(1,0,0)
-   print clsname
-   print 'Class Methods______'
+   print(clsname)
+   print('Class Methods______')
    console.set_color(0,0,0)
    m=get_class_methods(cls)
-   print '\n'.join([(k[1]+' ' +k[0]+'( '+', '.join(k[2])+' )') for k in m if not k[0].startswith('_')])
+   print('\n'.join([(k[1]+' ' +k[0]+'( '+', '.join(k[2])+' )') for k in m if not k[0].startswith(b'_')]))
    if print_private:
-         print '\n'.join([(k[1]+' ' +k[0]+'( '+', '.join(k[2])+' )') for k in m if k[0].startswith('_')])
+         print('\n'.join([(k[1]+' ' +k[0]+'( '+', '.join(k[2])+' )') for k in m if k[0].startswith(b'_')]))
    console.set_color(1,0,0)
-   print '_______Instance Methods______'
+   print('_______Instance Methods______')
    console.set_color(0,0,0)
    m=get_methods(cls)
-   print '\n'.join([(k[1]+'\t' +k[0]+'( '+', '.join(k[2])+' )') for k in m if not k[0].startswith('_')])
+   print('\n'.join([(k[1]+'\t' +k[0]+'( '+', '.join(k[2])+' )') for k in m if not k[0].startswith(b'_')]))
    if print_private:
-         print '\n'.join([(k[1]+'\t' +k[0]+'( '+', '.join(k[2])+' )') for k in m if k[0].startswith('_')])
+         print(b'\n'.join([(k[1]+'\t' +k[0]+b'( '+b', '.join(k[2])+b' )') for k in m if k[0].startswith(b'_')]))
+
