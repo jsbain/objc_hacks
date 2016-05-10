@@ -1,7 +1,9 @@
 from objc_util import *
-import ui
+import ui, ctypes
 import swizzle
+
 def tableView_heightForRowAtIndexPath_(_self,_sel,tv,path):
+		import sys
 		# For some reason, tv returns a NSNumber.  But, our tableview is in _self
 		tv_o=ObjCInstance(_self)
 		# get row and section from the path
@@ -28,7 +30,7 @@ def setup_tableview_swizzle(override=False):
 								tableView_heightForRowAtIndexPath_,'f@:@@')
 
 #upon import, swizzle the textview class. this only ever needs to be done once, 
-setup_tableview_swizzle()								
+setup_tableview_swizzle(True)								
 
 if __name__== '__main__':
 	#import textview_rowheight
