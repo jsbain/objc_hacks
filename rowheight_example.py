@@ -1,7 +1,8 @@
 #!python2
+
 import tableview_rowheight, ui, objc_util
 # create a tableview and delegate and datasource, per usual
-tableview_rowheight.setup_tableview_swizzle(True)
+#tableview_rowheight.setup_tableview_swizzle(False)
 t=ui.TableView(frame=(0,0,200,576))
 d=ui.ListDataSource([str(x) for x in range(100)])
 t.data_source=t.delegate=d
