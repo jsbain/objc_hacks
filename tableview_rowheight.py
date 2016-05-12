@@ -2,7 +2,7 @@ from objc_util import *
 import objc_util
 import ui, ctypes
 import swizzle
-
+@on_main_thread
 def tableView_heightForRowAtIndexPath_(_self,_sel,tv,path):
 	try:
 		import sys, objc_util, ctypes
