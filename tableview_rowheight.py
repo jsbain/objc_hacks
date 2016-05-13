@@ -27,12 +27,12 @@ def tableView_heightForRowAtIndexPath_(_self,_sel,tv,path):
 def setup_tableview_swizzle(override=False):
 	t=ui.TableView()
 	t_o=ObjCInstance(t)
-	CGfloat=t_o.rowHeight.encoding[0:1]
+	encoding=t_o.rowHeight.encoding[0:1]+b'@:@@'
 	if hasattr(t_o,'tableView_heightForRowAtIndexPath_') and not override:
 		return
 	swizzle.swizzle(ObjCClass(t_o._get_objc_classname()),
 								('tableView:heightForRowAtIndexPath:'),
-								tableView_heightForRowAtIndexPath_,CGFloat+b'@:@@')
+								tableView_heightForRowAtIndexPath_,encoding)
 
 #upon import, swizzle the textview class. this only ever needs to be done once, 
 setup_tableview_swizzle(0)								
