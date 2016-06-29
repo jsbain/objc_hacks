@@ -15,6 +15,45 @@ def _str_to_bytes(s):
 			return bytes(s,'ascii')
 	else:
 		return str(s)
+def _bytes_to_str(b):
+	if sys.version_info[0] >= 3:
+		if isinstance(b,str):
+			return b
+		else:
+			return str(b,'ascii')
+	else:
+		return str(b)
+@on_main_thread
+def is_swizzled(cls, selector):		
+	new_sel = 'original'+selector
+
+	orig_method=c.class_getInstanceMethod(cls.ptr, sel(selector))
+	new_method=c.class_getInstanceMethod(cls.ptr, sel(new_sel))
+	
+	c.method_getImplementation.restype=c_void_p
+	c.method_getImplementation.argtypes=[c_void_p]
+	if orig_method and \
+		new_method and \
+		c.method_getImplementation(orig_method) != c.method_getImplementation(new_method):
+			return True
+	
+@on_main_thread
+def unswizzle(cls, selector):		
+	new_sel = 'original'+selector
+	method_exchangeImplementations=c.method_exchangeImplementations
+	method_exchangeImplementations.restype=None
+	method_exchangeImplementations.argtypes=[c_void_p,c_void_p]
+	
+	orig_method=c.class_getInstanceMethod(cls.ptr, sel(selector))
+	new_method=c.class_getInstanceMethod(cls.ptr, sel(new_sel))
+	method_exchangeImplementations(orig_method, new_method)
+	
+	c.method_getImplementation.restype=c_void_p
+	c.method_getImplementation.argtypes=[c_void_p]
+	imp=c.method_getImplementation(orig_method)
+	types=c.method_getTypeEncoding(orig_method)
+	c.class_replaceMethod.argtypes=[c_void_p,c_void_p,c_void_p,c_char_p]
+	c.class_replaceMethod( cls, sel(selector), imp, types)
 @on_main_thread
 def swizzle(cls, selector, new_fcn,type_encoding=None):
 	'''swizzles ObjCClass cls's selector with implementation from python new_fcn.  new_fcn needs to adjere to ther type encoding of the original, including the two "hidden" arguments _self, _sel.
@@ -40,7 +79,8 @@ def swizzle(cls, selector, new_fcn,type_encoding=None):
 		argspec=inspect.getargspec(new_fcn.__closure__[0].cell_contents)
 	except:
 		argspec = inspect.getargspec(new_fcn)
-	if len(argspec.args) != len(argtypes):
+	has_varargs=inspect.getargspec(new_fcn).varargs
+	if (len(argspec.args) != len(argtypes)) and not has_varargs:
 		raise ValueError('%s has %i arguments (expected %i)' % (new_fcn, len(argspec.args), len(argtypes)))
 	IMPTYPE = ctypes.CFUNCTYPE(restype, *argtypes)
 	imp = IMPTYPE(new_fcn)
@@ -87,12 +127,11 @@ if __name__=='__main__':
 				console.hud_alert('saving '+str(obj.filePath()).split('/')[-1])
 		finally:
 			obj=ObjCInstance(_self)
-			original_method=getattr(obj,'original'+c.sel_getName(_sel),None)
+			original_method=getattr(obj,_bytes_to_str(b'original'+c.sel_getName(_sel)),None)
 			if original_method:
 				original_method()
 			
 	cls=ObjCInstance(c.object_getClass(t.ptr))
 	swizzle(cls,'saveData',saveData)
-
 											
 											
