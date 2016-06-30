@@ -11,17 +11,6 @@ def swizzlenop(cls,method):
 	'''
 	from objc_util import ObjCInstance,parse_types
 	def swizzled(self,sel,*args):
-		print('{} called'.format(method))
-		print (args)
-		argtypes=parse_types(getattr(ObjCInstance(self),method.replace(':','_')).encoding)[1][2:]
-		newargs=[]
-		for a,ty in zip(args,argtypes):
-			if a is not None and ty is c_void_p:
-				print (ObjCInstance(a))
-				newargs.append(ObjCInstance(a))
-			else:
-				print(a)
-				newargs.append(a)
 		return None
 	swizzle.swizzle(cls,method,swizzled)
 	
