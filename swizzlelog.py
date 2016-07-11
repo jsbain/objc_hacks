@@ -13,16 +13,17 @@ def swizzlenop(cls,method):
 	def swizzled(self,sel,*args):
 		return None
 	swizzle.swizzle(cls,method,swizzled)
-	
+
 def swizzlelog(cls,method):	
 	'''swizzles instance method of cls to print args, then call original.
 	cls is an ObjCClass.    method is selector name, including :'s
 	'''
 	from objc_util import ObjCInstance,parse_types
+	import time
 	def swizzled(self,sel,*args):
-		print('{} called'.format(method))
+		print('{}:{} called'.format(time.ctime(),method))
 		print (args)
-		argtypes=parse_types(getattr(ObjCInstance(self),method.replace(':','_')).encoding)[1][2:]
+		argtypes=parse_types(ObjCInstanceMethod(ObjCInstance(self), method).encoding)[1][2:]
 		newargs=[]
 		for a,ty in zip(args,argtypes):
 			if a is not None and ty is c_void_p:
@@ -31,8 +32,8 @@ def swizzlelog(cls,method):
 			else:
 				print(a)
 				newargs.append(a)
-		return getattr(ObjCInstance(self),'original'+method.replace(':','_'))(*newargs)
-	swizzle.swizzle(cls,method,swizzled)
+		return ObjCInstanceMethod(ObjCInstance(self), 'original'+method)(*newargs)
+	swizzle.swizzle(cls,method,swizzled,type_encoding=None,debug=True)
 def unswizzle(cls,method):
 	swizzle.unswizzle(cls,method)
 def is_swizzled(cls,method):

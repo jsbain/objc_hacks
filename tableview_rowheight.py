@@ -2,6 +2,11 @@ from objc_util import *
 import objc_util
 import ui, ctypes
 import swizzle
+''' improved tableview:
+	support for tableViewheightForRowAtIndexPath_
+	
+	'''
+	
 @on_main_thread
 def tableView_heightForRowAtIndexPath_(_self,_sel,tv,path):
 	try:
@@ -27,7 +32,8 @@ def tableView_heightForRowAtIndexPath_(_self,_sel,tv,path):
 def setup_tableview_swizzle(override=False):
 	t=ui.TableView()
 	t_o=ObjCInstance(t)
-	encoding=t_o.rowHeight.encoding[0:1]+b'@:@@'
+
+	encoding=ObjCInstanceMethod(t_o,'rowHeight').encoding[0:1]+b'@:@@'
 	if hasattr(t_o,'tableView_heightForRowAtIndexPath_') and not override:
 		return
 	swizzle.swizzle(ObjCClass(t_o._get_objc_classname()),
@@ -35,7 +41,7 @@ def setup_tableview_swizzle(override=False):
 								tableView_heightForRowAtIndexPath_,encoding)
 
 #upon import, swizzle the textview class. this only ever needs to be done once, 
-setup_tableview_swizzle(0)								
+setup_tableview_swizzle(1)								
 
 if __name__== '__main__':
 	#import textview_rowheight

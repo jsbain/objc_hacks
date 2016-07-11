@@ -50,12 +50,12 @@ def unswizzle(cls, selector):
 	
 	c.method_getImplementation.restype=c_void_p
 	c.method_getImplementation.argtypes=[c_void_p]
-	imp=c.method_getImplementation(orig_method)
-	types=c.method_getTypeEncoding(orig_method)
+	imp=c.method_getImplementation(new_method)
+	types=c.method_getTypeEncoding(new_method)
 	c.class_replaceMethod.argtypes=[c_void_p,c_void_p,c_void_p,c_char_p]
 	c.class_replaceMethod( cls, sel(selector), imp, types)
 @on_main_thread
-def swizzle(cls, selector, new_fcn,type_encoding=None):
+def swizzle(cls, selector, new_fcn,type_encoding=None,debug=False):
 	'''swizzles ObjCClass cls's selector with implementation from python new_fcn.  new_fcn needs to adjere to ther type encoding of the original, including the two "hidden" arguments _self, _sel.
 
 	if a class is already swizzled, this will override swizzled implemetation, and use new method.  We could implement a forwarding system, but it becomes hard to unswizzle because there is no way to remove a selector once added.  
@@ -82,10 +82,18 @@ def swizzle(cls, selector, new_fcn,type_encoding=None):
 	has_varargs=inspect.getargspec(new_fcn).varargs
 	if (len(argspec.args) != len(argtypes)) and not has_varargs:
 		raise ValueError('%s has %i arguments (expected %i)' % (new_fcn, len(argspec.args), len(argtypes)))
+	for i,arg in enumerate(argtypes):
+		if arg==ObjCBlock:
+			print('replace block with voidp')
+			argtypes[i]=ctypes.c_void_p
 	IMPTYPE = ctypes.CFUNCTYPE(restype, *argtypes)
 	imp = IMPTYPE(new_fcn)
 	retain_global(imp)
-	
+	if debug:
+		print(restype)
+		print(argtypes)
+		print(selector)
+		print(cls)
 	#find rootmost parent
 	# add new to orig_....   N (N-3) (N-2) (N-1)
 	# then starting at end, swap up the chain
@@ -133,5 +141,6 @@ if __name__=='__main__':
 			
 	cls=ObjCInstance(c.object_getClass(t.ptr))
 	swizzle(cls,'saveData',saveData)
+	
 											
 											

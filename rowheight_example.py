@@ -7,6 +7,7 @@ t=ui.TableView(frame=(0,0,200,576))
 d=ui.ListDataSource([str(x) for x in range(100)])
 t.data_source=t.delegate=d
 
+t.row_height=-1
 # here i will just create height that grows then shrinks again
 def tableview_height_for_section_row(tv,section,row):
 	return 10+(row/5)**2 if row<50 else 10+((100-row)/5)**2
