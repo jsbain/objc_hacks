@@ -7,8 +7,11 @@ Todo... copy multiple lines, to be able to copy a block of history to editor.
 Warning: place in site-packages to avoid problems
 '''
 from objc_util import ObjCClass,ObjCInstance,UIApplication,NSRange,on_main_thread
-import dialogs,ui,editor,os
-HISTORY_FILE=os.path.join(os.path.dirname(__file__),'_history.py')
+import dialogs,ui,editor,os,json
+HISTORY_FILE=os.path.join(os.path.dirname(__file__),'_history.json')
+if not os.path.exists(HISTORY_FILE):
+	with open(HISTORY_FILE,'w') as f:
+		json.dump([],f)
 
 cvc=UIApplication.sharedApplication().\
 						keyWindow().rootViewController().\
@@ -21,7 +24,7 @@ def select_history(data):
 	After the user selects a history item, write it to the console input
 	'''
 	if data.state==1:
-		history = [str(h)[:-1] for h in cvc.history()]
+		history = [str(h)[:-1] for h in cvc.history() or []]
 	
 		textField = cvc.promptEditorView().subviews()[0]
 		
@@ -184,14 +187,10 @@ def list_dialog(title='', items=None, multiple=False, done_button_title='Done'):
 	
 def load_history(sender):
 	'''Load previously saved history file into current history session'''
-	with open('_history.py','r') as f:	
-		UIApplication.sharedApplication().keyWindow().\
-		rootViewController().accessoryViewController().\
-		consoleViewController().history=	f.readlines()
-	history = [str(h)[:-1] for h in 
-				UIApplication.sharedApplication().keyWindow().\
-				rootViewController().accessoryViewController().\
-				consoleViewController().history()]
+	with open(HISTORY_FILE,'r') as f:
+		old_hist=json.load(f)
+		cvc.history=old_hist
+
 	#print (ObjCInstance(sender).view().superview().delegate())
 	#sender.c.view.data_source._items=history
 	#sender.c.idxNew=len(history)
@@ -201,21 +200,18 @@ def save_history(sender):
 	''' save current history session to the end of _history.py
 	We probably should do some sort of size check, or perhaps 
 	only write non duplicate lines'''
-	
-	with open( '_history.py','a') as f:	
-			f.write(	'\n'.join([str(h) for h in list(UIApplication.sharedApplication().keyWindow().\
-			rootViewController().accessoryViewController().\
-			consoleViewController().history())])+'\n')
+	with open(HISTORY_FILE,'r') as f:
+		old_hist=json.load(f)
+	with open(HISTORY_FILE,'w') as f:
+		new_hist=[str(h)[:-1] for h in reversed(list(cvc.history()))]
+		json.dump(old_hist+new_hist,f)
+
 
 def copy_history(sender):
 	raise NotImplementedError()
 	
 def add_long_press_history():	
 	'''add the longtap gesture to the button.  '''
-	cvc = UIApplication.sharedApplication().\
-					keyWindow().rootViewController().\
-					accessoryViewController().\
-					consoleViewController()
 	#there must be a cleaner way to get this button...
 	up=cvc.promptEditorView().superview().subviews()[1].subviews()[0]
 	up.gestureRecognizers=[] 
