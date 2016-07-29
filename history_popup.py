@@ -6,8 +6,14 @@ Todo... copy multiple lines, to be able to copy a block of history to editor.
 
 Warning: place in site-packages to avoid problems
 '''
-from objc_util import ObjCClass,ObjCInstance,UIApplication,NSRange
-import dialogs,ui,editor
+from objc_util import ObjCClass,ObjCInstance,UIApplication,NSRange,on_main_thread
+import dialogs,ui,editor,os
+HISTORY_FILE=os.path.join(os.path.dirname(__file__),'_history.py')
+
+cvc=UIApplication.sharedApplication().\
+						keyWindow().rootViewController().\
+						accessoryViewController().\
+						consoleViewController()
 
 def select_history(data):
 	''' callback for longtap of history button.
@@ -15,16 +21,9 @@ def select_history(data):
 	After the user selects a history item, write it to the console input
 	'''
 	if data.state==1:
-		history = [str(h)[:-1] for h in 
-				UIApplication.sharedApplication().keyWindow().\
-				rootViewController().accessoryViewController().\
-				consoleViewController().history()]
+		history = [str(h)[:-1] for h in cvc.history()]
 	
-		textField = UIApplication.sharedApplication().\
-						keyWindow().rootViewController().\
-						accessoryViewController().\
-						consoleViewController().promptEditorView().\
-						subviews()[0]
+		textField = cvc.promptEditorView().subviews()[0]
 		
 		txt = list_dialog('Select History',history)
 		if txt:
@@ -72,7 +71,7 @@ class ThemedListDataSource(object):
 	@items.getter
 	def items(self):
 		'''only get fiiltered items'''
-		return [i for i in self._items if self.filter in i ]
+		return [i for i in reversed(self._items) if self.filter in i ]
 		
 	def textfield_did_change(self, textfield):
 		'''callback when search field changes.  
@@ -146,7 +145,7 @@ class _ListDialogController (object):
 		
 	def row_selected(self, ds):
 		if not self.view.allows_multiple_selection:
-			self.selected_item = self.items[ds.selected_row]
+			self.selected_item = self.view.data_source.items[ds.selected_row]
 			self.view.close()
 		
 
@@ -155,6 +154,7 @@ def list_dialog(title='', items=None, multiple=False, done_button_title='Done'):
 	if not items:
 		items = []
 	c = _ListDialogController(title, items, multiple, done_button_title=done_button_title)
+	c.idxNew=0
 	#editor.apply_ui_theme(c.view,editor.get_theme_dict()['name'])
 	save=ui.ButtonItem(title='Save')
 	save.action=save_history
@@ -176,8 +176,9 @@ def list_dialog(title='', items=None, multiple=False, done_button_title='Done'):
 	searchField.delegate=c.view.data_source
 	c.view.right_button_items=[save,load,copy]
 	c.view.left_button_items=[searchBarButton]
+
 	editor.present_themed(c.view,editor.get_theme_dict()['name'],style='popover')
-	#c.view.present('popover',title_barcolor='#000000')''
+
 	c.view.wait_modal()
 	return c.selected_item
 	
@@ -191,8 +192,9 @@ def load_history(sender):
 				UIApplication.sharedApplication().keyWindow().\
 				rootViewController().accessoryViewController().\
 				consoleViewController().history()]
-	print (ObjCInstance(sender).view().superview().delegate())
-	#sender.c.view.data_source.items=history
+	#print (ObjCInstance(sender).view().superview().delegate())
+	#sender.c.view.data_source._items=history
+	#sender.c.idxNew=len(history)
 	#sender.c.view.reload()
 	
 def save_history(sender):
@@ -200,10 +202,10 @@ def save_history(sender):
 	We probably should do some sort of size check, or perhaps 
 	only write non duplicate lines'''
 	
-	with open('_history.py','a') as f:	
-			f.write(	'\n'.join([str(h) for h in UIApplication.sharedApplication().keyWindow().\
+	with open( '_history.py','a') as f:	
+			f.write(	'\n'.join([str(h) for h in list(UIApplication.sharedApplication().keyWindow().\
 			rootViewController().accessoryViewController().\
-			consoleViewController().history()])+'\n')
+			consoleViewController().history())])+'\n')
 
 def copy_history(sender):
 	raise NotImplementedError()
@@ -224,5 +226,7 @@ def add_long_press_history():
 	gestures._saved=[save_history, load_history, list_dialog, _ListDialogController, select_history ]
 if __name__=='__main__':
 	import history_popup
+	from importlib import reload
+	reload(history_popup)
 	history_popup.add_long_press_history()
 	
