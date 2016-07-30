@@ -106,7 +106,7 @@ class ThemedListDataSource(object):
 	def tableview_cell_for_row(self, tv, section, row):
 		item = self.items[row]
 		cell = ui.TableViewCell()
-		cell.text_label.number_of_lines = self.number_of_lines
+		cell.text_label.number_of_lines = 0
 		cell.text_label.text = str(item)
 		cell.text_label.text_color =editor.get_theme_dict()['default_text']
 		if self.highlight_color:
@@ -124,6 +124,8 @@ class _ListDialogController (object):
 		self.items = items
 		self.selected_item = None
 		self.view = ui.TableView()
+		ObjCInstance(self.view).estimatedRowHeight=25
+		self.view.row_height=-1
 		self.view.background_color=editor.get_theme_dict()['background']
 		self.view.tint_color=editor.get_theme_dict()['default_text']
 		self.view.separator_color=editor.get_theme_dict()['separator_line']
