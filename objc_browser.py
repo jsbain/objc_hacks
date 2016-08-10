@@ -14,6 +14,7 @@ try:
 	from . import swizzlelog
 except:
 	import swizzlelog
+
 class table_browser(ui.View):
 	def __init__(self,items, *args,**kwargs):
 		ui.View.__init__(self,*args,**kwargs)
@@ -75,7 +76,7 @@ class class_browser(table_browser):
 				sel_name = c.sel_getName(selector)
 				if not isinstance(sel_name,str):
 					sel_name = sel_name.decode('ascii')
-				py_method_name = sel_name.replace(':', '_')
+				py_method_name = sel_name
 				if '.' not in py_method_name:
 					py_methods.append(py_method_name)
 			c.free(method_list_ptr)
@@ -100,8 +101,8 @@ class method_browser(table_browser):
 		methodname=self.items[row]
 
 		clipboard.set(methodname)		
-		swizzlelog.swizzlelog(ObjCClass(self.name),
-			methodname[0]+methodname[1:].replace('_',':'))
+		swizzlelog.swizzlelog(ObjCClass(self.name), methodname)
+
 		console.hud_alert('{} copied to clipboard, and swizzle installed'.format(methodname))
 		tv.reload()
 	def tableview_can_delete(self, tableview, section, row):
@@ -113,13 +114,13 @@ class method_browser(table_browser):
 		cell.accessory_type='disclosure_indicator'
 		methodname=self.items[row]
 		cell.text_label.text=methodname
-		if swizzlelog.is_swizzled(ObjCClass(self.name),			methodname[0]+methodname[1:].replace('_',':')):
+		if swizzlelog.is_swizzled(ObjCClass(self.name),	methodname):	
 			cell.text_label.text_color='red'
 		return cell
 	def tableview_delete(self, tv, section, row):
 		methodname=self.items[row]
 		# hmm... this does not seem to really work
-		swizzlelog.unswizzle(ObjCClass(self.name),			methodname[0]+methodname[1:].replace('_',':'))
+		swizzlelog.unswizzle(ObjCClass(self.name),	methodname)
 		import console
 		console.hud_alert('{} unswizzled swizzle'.format(methodname))
 		tv.reload()
@@ -127,3 +128,5 @@ v=class_browser()
 vv=ui.View()
 
 v.nv.present('sheet')
+
+
