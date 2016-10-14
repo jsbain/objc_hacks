@@ -16,8 +16,8 @@ if not logger.handlers:
 	formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 	hdlr.setFormatter(formatter)
 	logger.addHandler(hdlr) 
-logger.setLevel(logging.DEBUG)
-#logger.setLevel(logging.INFO)
+#logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 logger.info('logging started')
 
 from threading import Lock
@@ -36,6 +36,7 @@ c._Block_signature.argtypes=[c_void_p]
 
 class Suggestion(dict):
 	def __init__(self,casematches=True,fuzzy=False,isFuzzy=False,isKeyword=False,matchedRanges=0,name='apparent_endoding',rank=0,typ='function',underscores=False):
+		
 		self.update(
 			{'caseMatches':casematches, 
 			'fuzzy':fuzzy, 
@@ -46,8 +47,25 @@ class Suggestion(dict):
 			'rank':rank,
 			'type': typ,
 			'underscores': underscores})
+import rlcompleterjb
 
-
+comp=rlcompleterjb.Completer()
+def complete(txt,_self):
+	if txt:
+		i=0
+		matches=[]
+		#matchRanges=ObjCInstanceMethod(ObjCInstance(_self), 'matchedRangesForPattern:inString:')
+		while True:
+			name=comp.complete(txt,i)
+			i+=1
+			if not name:
+				return matches
+			#ranges=matchRanges(name,txt)
+			#logger.info(ranges)
+			matches.append(
+				Suggestion(matchedRanges=0, 
+								name=name,
+								underscores=('._' in name)))
 
 def suggestCompletionsForPosition_inTextView_requestID_completion_(_self,_sel,position, tv, requestid, completion):
 	with Lock():
@@ -65,11 +83,13 @@ def suggestCompletionsForPosition_inTextView_requestID_completion_(_self,_sel,po
 		blk=ObjCBlock(completion_block,
 			restype=None,
 			argtypes=[c_void_p, c_int, c_void_p])
-		originalmethod=ObjCInstanceMethod(ObjCInstance(_self), 'original'+'suggestCompletionsForPosition:inTextView:requestID:completion:')
-		logger.debug('   calling orig({},{},{},{})'.format(position, cast(tv,c_void_p), requestid,cast(completion,c_void_p)))
+		#originalmethod=ObjCInstanceMethod(ObjCInstance(_self), 'original'+'suggestCompletionsForPosition:inTextView:requestID:completion:')
+		#logger.debug('   calling orig({},{},{},{})'.format(position, cast(tv,c_void_p), requestid,cast(completion,c_void_p)))
 		#originalmethod(position, cast(tv,c_void_p), requestid,blk)
-		sugg=ns([Suggestion(),])
-		completion_block(completion,requestid, sugg.ptr)
+		#sugg=ns([Suggestion(),])
+		sugg=ns(complete(str(ObjCInstance(tv).text())[0:position], c_void_p(_self)))
+		if sugg:
+			completion_block(completion,requestid, sugg.ptr)
 		logger.debug('   done orig')
 swizzle.swizzle(ObjCClass('PA2ConsoleCompletionProvider'),'suggestCompletionsForPosition:inTextView:requestID:completion:'
 ,suggestCompletionsForPosition_inTextView_requestID_completion_,type_encoding=None,debug=True)
@@ -88,10 +108,6 @@ def matchedRangesForPattern_inString_(_self,_sel,pattern, string):
 			
 #swizzle.swizzle(ObjCClass('PA2ConsoleCompletionProvider'),	'matchedRangesForPattern:inString:',	matchedRangesForPattern_inString_,	type_encoding=None,debug=True)
 
-def u():
-	def suggestCompletionsForPosition_inTextView_requestID_completion_(_self,_sel,position, tv, requestid, completion):
-		swizzle.swizzle(ObjCClass('PA2ConsoleCompletionProvider'),
-			'suggestCompletionsForPosition:inTextView:requestID:completion:'
-			,suggestCompletionsForPosition_inTextView_requestID_completion_,
-			type_encoding=None,debug=True)
-	
+
+import requests
+req=requests.get('http://google.com')
