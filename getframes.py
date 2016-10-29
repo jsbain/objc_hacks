@@ -22,15 +22,28 @@ for (Float64 i = 0; i < CMTimeGetSeconds(asset.duration) *  FPS ; i++){
 }
 '''
 from objc_util import *
-import ui,time
-file=os.path.expanduser('~/Documents/capturedvideo.MOV')
-if not os.path.exists(file):
-   raise IOError
-asset=ObjCClass('AVURLAsset').alloc().initWithURL_options_(nsurl(file),None)
-generator=ObjCClass('AVAssetImageGenerator').alloc().initWithAsset_(asset)
+import ui,time,os,photos
+
+assets = photos.get_assets(media_type='video')
+#print(len(assets))
+asset = photos.pick_asset(assets)
+duration=asset.duration
+#asset.get_image().show()
+print(asset.duration)
+print(asset.local_id)
+
+#file=os.path.expanduser('~/Documents/capturedvideo.MOV')
+#with open(file,'wb') as f:
+#	f.write(asset.get_image_data().getvalue())
+#if not os.path.exists(file):
+#   raise IOError
+phasset=ObjCInstance(asset)
+asseturl='assets-library://asset/asset.MOV?id={}&ext=MOV'.format(str(phasset.localIdentifier()).split('/')[0])
+asseturl=ObjCClass('AVURLAsset').alloc().initWithURL_options_(nsurl(asseturl),None)
+generator=ObjCClass('AVAssetImageGenerator').alloc().initWithAsset_(asseturl)
 
 
-from ctypes import c_int32,c_uint32, c_int64,byref,POINTER,c_void_p,pointer,addressof
+from ctypes import c_int32,c_uint32, c_int64,byref,POINTER,c_void_p,pointer,addressof, c_double
 
 CMTimeValue=c_int64
 CMTimeScale=c_int32
@@ -46,6 +59,8 @@ class CMTime(Structure):
       self.timescale=timescale
       self.flags=flags
       self.epoch=epoch
+c.CMTimeGetSeconds.argtypes=[CMTime]
+c.CMTimeGetSeconds.restype=c_double
 z=CMTime(0,24)
 
 generator.setRequestedTimeToleranceAfter_(z,restype=None,argtypes=[CMTime])
@@ -63,7 +78,9 @@ root.present('sheet')
 lastimage=None  # in case we need to be careful with references
 tactual=CMTime(0,1) #return value
 t=CMTime(0,1)  # timescale is the important bit
-for i in range(0,10):
+
+
+for i in range(0,int(duration)):
    t.value=i
    cgimage_obj=generator.copyCGImageAtTime_actualTime_error_(t,byref(tactual),None,restype=c_void_p,argtypes=[CMTime,POINTER(CMTime),POINTER(c_void_p)])
 
