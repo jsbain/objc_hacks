@@ -60,5 +60,8 @@ def _get_taskinfo():
             if kr != KERN_SUCCESS:
                 return None
             return ti
-
+if __name__=='__main__':
+	print (_get_taskinfo())
+	A=list(range(100000))
+	print (_get_taskinfo())
          
