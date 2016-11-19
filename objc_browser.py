@@ -20,13 +20,13 @@ class table_browser(ui.View):
 		ui.View.__init__(self,*args,**kwargs)
 		self.height=700
 		self.width=320
-		self.items=items
+		self.items=sorted(items)
 		self.tv=ui.TableView(frame=self.bounds)
 		self.tv.delegate=self
 		self.tv.data_source=self
 		self.add_subview(self.tv)
 		self.filter=''
-		self.filtereditems=[x for x in self.items if self.filter in x.lower()]
+		self.filtereditems=sorted([x for x in self.items if self.filter in x.lower()])
 	def tableview_number_of_rows(self, tv, section):
 		return len(self.filtereditems)
 
