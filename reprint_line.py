@@ -11,13 +11,15 @@ def reprint_line(text):
 	p= ts.paragraphs()[r.location-1]
 	ts.replaceCharactersInRange_withString_(p.range(),ns(text+'\n'))
 	tv.setNeedsLayout()
+	return p
 if __name__=='__main__':
 	import time,console
 	console.clear()
+	console.set_color(1,0,0)
 	print('Starting download')
 	print('downloading')
 	for i in range(0,100,10):
 		time.sleep(0.5)
 		p=reprint_line('downloading {}%'.format(i))
-	reprint_line('Complete!')
+	p=reprint_line('Complete!')
 

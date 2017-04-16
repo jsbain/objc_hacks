@@ -2,6 +2,7 @@
 # set attributed text dor existing textview
 # same works for Label, except dont need to set allowsAttributedTextEditing, or call on main thread
 from objc_util import *
+import re
 
 mystr='''here are some colors:
    red, yellow, blue, magenta, black, cyan
@@ -26,8 +27,9 @@ for k,color in colors.items():
    for m in sre:
       st,end=m.span()
       l=end-st
-      mystro.addAttribute_value_range_('NSColor',color,NSRange(st,l))
-
+      mystro.addAttribute_value_range_('NSBackgroundColor',color,NSRange(st,l))
+      f=ObjCClass('UIFont').fontWithName_size_('Courier',15)
+      mystro.addAttribute_value_range_(ObjCInstance(c_void_p.in_dll(c,'NSFontAttributeName')),f,NSRange(st,l))
 # setup views
 import ui
 

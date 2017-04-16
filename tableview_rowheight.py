@@ -26,7 +26,8 @@ def tableView_heightForRowAtIndexPath_(_self,_sel,tv,path):
 		else:
 			return tv_py.row_height
 	except Exception as e:
-		print(e)
+		import traceback
+		traceback.print_exc()
 		return 44
 # set up the swizzle.. only needs to be do e once
 def setup_tableview_swizzle(override=False):

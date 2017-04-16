@@ -34,6 +34,9 @@ c._Block_extended_layout.argtypes=[c_void_p]
 c._Block_signature.restype=c_char_p
 c._Block_signature.argtypes=[c_void_p]
 
+c._Block_copy.argtypes=[c_void_p]
+c._Block_copy.restype=c_void_p
+
 class Suggestion(dict):
 	def __init__(self,casematches=True,fuzzy=False,isFuzzy=False,isKeyword=False,matchedRanges=0,name='apparent_endoding',rank=0,typ='function',underscores=False):
 		
@@ -48,6 +51,26 @@ class Suggestion(dict):
 			'type': typ,
 			'underscores': underscores})
 import rlcompleterjb
+import ui,time
+def complete_later(blk,_requestid):
+	ui.cancel_delays()
+	blkcopy=c._Block_copy(c_void_p(blk))
+	logger.debug(blk,blkcopy)
+	b=cast(blkcopy,POINTER(completion_block_literal)).contents		
+	
+	s=Suggestion(matchedRanges=0, 
+								name='poop')
+	s2=Suggestion(matchedRanges=0, 
+								name='pooperiffic')
+	@ui.in_background
+	def invoke():
+		time.sleep(2)
+		completiondictlist=ns([s,s2])
+		on_main_thread(
+		b.invoke)(c_void_p(blkcopy),c_short(_requestid),completiondictlist)
+	#ui.delay(invoke,0.05)
+	invoke()
+		
 
 comp=rlcompleterjb.Completer()
 def complete(txt,_self):
@@ -87,9 +110,13 @@ def suggestCompletionsForPosition_inTextView_requestID_completion_(_self,_sel,po
 		#logger.debug('   calling orig({},{},{},{})'.format(position, cast(tv,c_void_p), requestid,cast(completion,c_void_p)))
 		#originalmethod(position, cast(tv,c_void_p), requestid,blk)
 		#sugg=ns([Suggestion(),])
-		sugg=ns(complete(str(ObjCInstance(tv).text())[0:position], c_void_p(_self)))
-		if sugg:
-			completion_block(completion,requestid, sugg.ptr)
+		
+		if 0:
+			sugg=ns(complete(str(ObjCInstance(tv).text())[0:position], c_void_p(_self)))
+			if sugg:
+				completion_block(completion,requestid, sugg.ptr)
+		else:
+			complete_later(completion,requestid)
 		logger.debug('   done orig')
 swizzle.swizzle(ObjCClass('PA2ConsoleCompletionProvider'),'suggestCompletionsForPosition:inTextView:requestID:completion:'
 ,suggestCompletionsForPosition_inTextView_requestID_completion_,type_encoding=None,debug=True)

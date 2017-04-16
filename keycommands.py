@@ -39,13 +39,16 @@ __keycommands_obj=ns(keycommands)
 #   note __keycommands_obj must hang around in globals, there is probably a more robust way to do this.  
 def replacement_keyCommands(_self,_cmd):
 		return __keycommands_obj.ptr
-replacement=create_objc_class('replacement',
-											ObjCClass('UIResponder'),			
-											[replacement_keyCommands])
-replacement_obj=replacement.new()
-newimp=c.method_getImplementation(replacement_obj.keyCommands.method)
-oldimp=c.method_setImplementation(app.keyCommands.method,newimp)
-
+		
+		
+if 0:		
+	replacement=create_objc_class('replacement',
+												ObjCClass('UIResponder'),			
+												[replacement_keyCommands])
+	replacement_obj=replacement.new()
+	newimp=c.method_getImplementation(replacement_obj.keyCommands.method)
+	oldimp=c.method_setImplementation(app.keyCommands.method,newimp)
+swizzle(UIApplication,'keyCommands',replacement_keyCommands)
 print 'testing if keycommand was added'
 assert(sel_getName(app.keyCommands()[-1].action())=='handleCommandH') #was key added?
 print 'testing that action was added'

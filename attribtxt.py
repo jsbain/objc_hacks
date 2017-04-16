@@ -1,7 +1,7 @@
 # coding: utf-8
 # experiments with attributed strings
 
-from objc import *
+from objc_util import *
 import ctypes
 
 NSMutableAttributedString=ObjCClass('NSMutableAttributedString')
@@ -14,13 +14,13 @@ attrtext.initWithString_(ns(strtext))
 
 sz=6.0
 traits=0
-for i in xrange(len(strtext)/2):
+for i in range(len(strtext)//2):
    f=UIFont.systemFontOfSize_traits_(sz,traits)
    nsr=NSRange(i,1)
    attrtext.addAttribute_value_range_(NSFontAttributeName,f,nsr)
    sz+=2.5
    traits+=1
-for i in xrange(len(strtext)/2,len(strtext)-1):
+for i in range(len(strtext)//2,len(strtext)-1):
    f=UIFont.systemFontOfSize_traits_(sz,traits)
    nsr=NSRange(i,1)
    attrtext.addAttribute_value_range_(NSFontAttributeName,f,nsr)

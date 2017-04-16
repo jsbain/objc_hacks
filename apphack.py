@@ -15,7 +15,7 @@ def get_toolbar(view):
 	sv=view.subviews()
 
 	for v in sv:
-		if v._get_objc_classname()=='OMTabViewToolbar':
+		if v._get_objc_classname().startswith(b'OMTabViewToolbar'):
 			return v
 		tb= get_toolbar(v)
 		if tb:
@@ -59,7 +59,6 @@ if __name__=='__main__':
 	def run_script(sender):
 		'''run a script without clearing glbals'''
 		import editor
-		editor.reload_files()
-		execfile(editor.get_path(),globals())
+		exec(editor.get_text(),globals())
 
 	create_toolbar_button(run_script,'iow:play_32',0,'execfile')

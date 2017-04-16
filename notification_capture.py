@@ -10,6 +10,7 @@ NSNotificationCenter=ObjCClass('NSNotificationCenter')
 
 class GlobalNotificationObserver(object):
 	def __init__(self, excludes=('UI','NS','_UI'))	:
+		#self.captured=[]
 		self.captured={}
 		self.center=NSNotificationCenter.defaultCenter()
 		self.excludes=excludes
@@ -25,7 +26,8 @@ class GlobalNotificationObserver(object):
 			obj=str(ObjCInstance(notification).object())
 			userInfo=str(ObjCInstance(notification).userInfo())
 		
-			self.captured[name]=str(obj)+str(userInfo)
+			#self.captured.append(ObjCInstance(notification),)
+			self.captured[name]=ObjCInstance(notification)
 			#console.hud_alert(name)
 		except:
 			pass
@@ -54,9 +56,11 @@ class GlobalNotificationObserver(object):
 		self.stop()
 		self.captured={}
 if __name__=='__main__':
-	g=GlobalNotificationObserver()
+	g=GlobalNotificationObserver(excludes='zzz')
 	g.start()
-
-
-
-
+	import ui,time
+	v=ui.View()
+	v.present('sheet')
+	time.sleep(5)
+	g.stop()
+	print(list(g.captured.keys()))
