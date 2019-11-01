@@ -6,7 +6,14 @@ import swizzle
 	support for tableViewheightForRowAtIndexPath_
 	
 	'''
-	
+@on_main_thread
+def tableView_willDisplayHeaderView_forSection_(_self,_sel,tv, v,section):
+	tv_o=objc_util.ObjCInstance(_self)
+	pyo=tv_o.pyObject(restype=c_void_p,argtypes=[])
+	tv_py=ctypes.cast(pyo.value,ctypes.py_object).value
+	if tv_py.delegate and hasattr(tv_py.delegate,'will_display_header'):
+			tv_py.delegate.will_display_header(v,section)
+
 @on_main_thread
 def tableView_heightForRowAtIndexPath_(_self,_sel,tv,path):
 	try:
@@ -41,8 +48,13 @@ def setup_tableview_swizzle(override=False):
 								('tableView:heightForRowAtIndexPath:'),
 								tableView_heightForRowAtIndexPath_,encoding)
 
+	encoding=b'v@:@@i'
+	swizzle.swizzle(ObjCClass(t_o._get_objc_classname()),
+		('tableView:willDisplayHeaderView:forSection:'),
+		tableView_willDisplayHeaderView_forSection_,encoding)
 #upon import, swizzle the textview class. this only ever needs to be done once, 
 setup_tableview_swizzle(1)								
+
 
 if __name__== '__main__':
 	#import textview_rowheight
@@ -59,8 +71,17 @@ if __name__== '__main__':
 	heights=[random.randrange(11,72) for x in range(100)]
 	def tableview_height_for_section_row(tv,section,row):
 		return heights[row]
+	def tableview_number_of_sections(tv):
+		return 2
+	def tableview_title_for_header( tv,sec):
+		return 'hoo'
+	def will_display_header(v,section):
+		ObjCInstance(v).contentView().backgroundColor=UIColor.redColor()
+		
 	d.tableview_height_for_section_row=tableview_height_for_section_row
-	
+	d.tableview_number_of_sections=tableview_number_of_sections
+	d.tableview_title_for_header=tableview_title_for_header
+	d.will_display_header=will_display_header
 	# add an estimatedRowHeight. this is optional, but in theory improves performance
 	t_o=ObjCInstance(t)
 	t_o.estimatedRowHeight=44
